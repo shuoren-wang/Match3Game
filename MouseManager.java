@@ -27,12 +27,6 @@ public class MouseManager implements MouseListener,MouseMotionListener {
         right=false;
     }
 
-    /**
-     *
-     */
-    public void tick(){
-
-    }
 
     @Override
     public void mouseClicked(MouseEvent e) {

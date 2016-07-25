@@ -41,15 +41,12 @@ public class World {
         {
             aPressed=true;
         }
-        if(  aPressed==true && game.getMouseManager().left)
+        if(  aPressed==true && game.getMouseManager().left)     //A is move to the left
         {
             System.out.println("left==true");
             swap();
             aPressed=false;
         }
-
-
-
     }
 
     private void swap() {
@@ -69,11 +66,6 @@ public class World {
         g.fillRect(game.getMouseManager().getMouseX(),
                 game.getMouseManager().getMouseY(),
                 10,10);
-
-
-    }
-
-    private void setA(int x, int y){
 
 
     }
