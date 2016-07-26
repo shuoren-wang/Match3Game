@@ -17,6 +17,7 @@ public class World {
     private Rectangle bounds;
     private ArrayList<Entity> adjEntityNeighborList;
     private ArrayList<Entity> currentEntityNeighborList;
+    private ArrayList<Entity> neighborList3;
 
     boolean pressedInBoundary=false;
 
@@ -33,6 +34,7 @@ public class World {
 
         adjEntityNeighborList=new ArrayList<>();
         currentEntityNeighborList=new ArrayList<>();
+        neighborList3=new ArrayList<>();
     }
 
     /**
@@ -196,6 +198,7 @@ public class World {
             }
         adjEntityNeighborList.clear();
         currentEntityNeighborList.clear();
+        neighborList3.clear();
 
     }
 
@@ -208,13 +211,14 @@ public class World {
     private boolean canSwitch(){
         if(!checkBoundary(currentEntity.getX()+Entity.WIDTH,currentEntity.getY()))
             return false;
-        return getMoveRightPatternNeighbors_2().size()>=2 || getMoveRightPatternTwoNeighbors_1().size()>=2;
+        return getMoveRightPatternNeighbors_2().size()>=2 || getMoveRightPatternNeighbors_1().size()>=2 || getMoveRightPatternNeighbors_3().size()>=2;
     }
 
     /**
-     * Given currentEntity and direction, find same pattern neighbors
-     * @return a list of entity that will form a match with currentEntity
+     * a list of entities align with currentEntity have the same pattern with rightEntity
+     * @return a list of entity that will form a match with rightEntity
      */
+
     ArrayList<Entity> getMoveRightPatternNeighbors_2(){
         int x=currentEntity.getX();
         int y=currentEntity.getY();
@@ -241,10 +245,10 @@ public class World {
     }
 
     /**
-     * a list of entities align with switchedEntity have the same pattern with currentEntity
+     * a list of entities align with rightEntity have the same pattern with currentEntity
      * @return a list of entity that will form a match with currentEntity
      */
-    ArrayList<Entity> getMoveRightPatternTwoNeighbors_1(){
+    ArrayList<Entity> getMoveRightPatternNeighbors_1(){
         int x=currentEntity.getX();
         int y=currentEntity.getY();
 
@@ -265,5 +269,25 @@ public class World {
         }
 
         return adjEntityNeighborList;
+    }
+
+
+    /**
+     * a list of entities align with rightEntity have the same pattern with currentEntity
+     * @return a list of entity that will form a match with currentEntity
+     */
+    ArrayList<Entity> getMoveRightPatternNeighbors_3(){
+        int x=currentEntity.getX();
+        int y=currentEntity.getY();
+
+        //check right
+        for(int j=x/Entity.WIDTH+2;j<width;j++){
+            if(boardEntities[j][y/Entity.HEIGHT].getId()==currentEntity.getId())
+                neighborList3.add(boardEntities[j][y/Entity.HEIGHT]);
+            else
+                break;
+        }
+
+        return neighborList3;
     }
 }
