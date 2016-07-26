@@ -7,8 +7,8 @@ import java.awt.image.BufferedImage;
  */
 public class Entity{
     protected Game game;
-    protected int x;
-    protected int y;
+    private int x;
+    private int y;
     public static final int WIDTH=60,HEIGHT=60;
     protected Rectangle bounds;
     public BufferedImage texture=Assets.grass;

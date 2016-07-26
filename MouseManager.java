@@ -1,3 +1,4 @@
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
@@ -16,8 +17,7 @@ public class MouseManager implements MouseListener,MouseMotionListener {
     private final int LIMIT=3;   //smallest movement is 3
 
     MouseManager(){
-        x=0;
-        y=0;
+
         preX=0;
         preY=0;
 
@@ -52,19 +52,36 @@ public class MouseManager implements MouseListener,MouseMotionListener {
     @Override
     public void mouseReleased(MouseEvent e) {
         if(e.getButton()==MouseEvent.BUTTON1){
-            pressed=false;
-
-            System.out.println("Press is false");
 
             x=e.getX();
             y=e.getY();
 
-            if(x-preX>LIMIT){
-                left=true;
+            // horizontal movement
+            if(Math.abs(getXMove()) > LIMIT && Math.abs(getXMove())>Math.abs(getYMove())) {
+                if (getXMove() > LIMIT) {
+                    right = true;
+                    return;
+                }
+                if (getXMove() < -LIMIT) {
+                    left = true;
+                    return;
+                }
+            }
+            //vertical movement
+            if(Math.abs(getYMove())>LIMIT && Math.abs(getYMove())>Math.abs(getXMove())){
+                if (getYMove() > LIMIT) {
+                    down = true;
+                    return;
+                }
+                if (getYMove() < -LIMIT) {
+                    up = true;
+                    return;
+                }
             }
 
         }
     }
+
 
     @Override
     public void mouseEntered(MouseEvent e) {
@@ -86,7 +103,12 @@ public class MouseManager implements MouseListener,MouseMotionListener {
         y =e.getY();
     }
 
-    //GETTERS
+
+    public int getXMove(){return x-preX;}
+
+    public int getYMove(){return y-preY;}
+
+    //GETTERS and SETTERS
 
     public int getMouseX() {
         return x;
@@ -96,8 +118,12 @@ public class MouseManager implements MouseListener,MouseMotionListener {
         return y;
     }
 
+
     public boolean isPressed() {
         return pressed;
     }
 
+    public void setPressed(boolean pressed) {
+        this.pressed = pressed;
+    }
 }

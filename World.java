@@ -14,8 +14,9 @@ public class World {
     private int[][] boardIDs;
     private Entity[][] boardEntities;
     private Entity currentEntity;
+    private Rectangle bounds;
 
-    boolean changeToBlack=false;
+    boolean pressedInBoundary=false;
 
     World(Game game,String path){
 
@@ -24,41 +25,111 @@ public class World {
 
         loadWorld(path);
 
-        boardEntities = new Entity[width][height];
-
         init();
+
+        bounds=new Rectangle(0,0,width*Entity.WIDTH,height*Entity.HEIGHT);
     }
 
     /**
      * initialize boardEntities[][] according to boardIDs[][]
      */
     private void init(){
+        boardEntities = new Entity[width][height];
+
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
                 boardEntities[x][y] = new Entity(x * Entity.WIDTH, y * Entity.HEIGHT, boardIDs[x][y],game);
             }
         }
-
-
     }
 
     /**
-     * if A is selected and mouse move to the direction of B
-     * change A,B coordinate
+     * if mouse clicked within the game boundary,
+     * set current entity to be the clicked entity
+     * if mouse move to certain direction, switch the switch current entity with the adjacent entity with in boundary
      */
     public void tick(){
         mouseX = game.getMouseManager().getMouseX();
         mouseY = game.getMouseManager().getMouseY();
 
+        if(game.getMouseManager().isPressed() && checkBoundary(mouseX,mouseY)){
+            pressedInBoundary=true;
 
+            currentEntity = boardEntities[mouseX / Entity.WIDTH][mouseY / Entity.HEIGHT];
+            game.getMouseManager().setPressed(false);
+
+        }
+
+        switchEntity();
+    }
+
+    /**
+     * switch current entity with the adjacent entity according to mouse move direction
+     */
+    private void switchEntity(){
+        if(game.getMouseManager().right==true){
+            swap(1,0);
+            game.getMouseManager().right=false;
+        }
+        if(game.getMouseManager().left==true){
+            swap(-1,0);
+            game.getMouseManager().left=false;
+        }
+        if(game.getMouseManager().up==true){
+            swap(0,-1);
+            game.getMouseManager().up=false;
+        }
+        if(game.getMouseManager().down==true){
+            swap(0,1);
+            game.getMouseManager().down=false;
+        }
+
+    }
+
+    /**
+     * if currentEntity does not exist or currentEntity is the most left entity, return;
+     * otherwise, exchange the position of currentEntity with its left:
+     * switch x coordinate
+     * switch boardEntities[][] position
+     * switch boardIDs (don't have to)
+     * @param xChange  boardEntities[][] position change :1=right,-1=left,
+     * @param yChange boardEntities[][] position change :1=down,-1=up,
+     */
+    private void swap(int xChange,int yChange) {
+        if(currentEntity==null)
+            return;
+
+        if(!checkBoundary(currentEntity.getX()+xChange*Entity.WIDTH,currentEntity.getY()+yChange*Entity.HEIGHT))
+            return;
+
+        int x=currentEntity.getX();
+        int y=currentEntity.getY();
+
+        Entity tempCurrentEntity=new Entity(x, y, currentEntity.getId(),game);
+        Entity exchangeEntity=boardEntities[x/Entity.WIDTH +xChange][y/Entity.HEIGHT+yChange];
+
+        //switch x coordinate
+        tempCurrentEntity.setX(exchangeEntity.getX());
+        tempCurrentEntity.setY(exchangeEntity.getY());
+
+        exchangeEntity.setX(x);
+        exchangeEntity.setY(y);
+
+        //switch boardEntities[][] position
+        boardEntities[x/Entity.WIDTH ][y/Entity.HEIGHT]=exchangeEntity;
+        boardEntities[x/Entity.WIDTH +xChange][y/Entity.HEIGHT+yChange]=tempCurrentEntity;
     }
 
 
     public void render(Graphics g){
         for (int y = 0; y < height; y++)
             for (int x = 0; x < width; x++) {
-                boardEntities[x][y].render(g);
+                getEntity(x,y).render(g);
             }
+        if(currentEntity!=null){
+            g.setColor(new Color(1f,0f,0f,.2f )); //last number to set transparency
+            g.fillRect(currentEntity.getX(),currentEntity.getY(),Entity.WIDTH,Entity.HEIGHT);
+        }
 
         g.setColor(Color.cyan);
         g.fillRect(mouseX,mouseY,10,10);
@@ -91,41 +162,17 @@ public class World {
      * @return entity
      */
     public Entity getEntity(int x, int y) {
-
-//        if (boardEntities[x][y] == null) {
-//            boardEntities[x][y]= new Entity(x * Entity.WIDTH, y * Entity.HEIGHT, 4,game);
-//        }
+        if (boardEntities[x][y] == null) {
+            boardEntities[x][y]= new Entity(x * Entity.WIDTH, y * Entity.HEIGHT, 4,game);
+        }
         return boardEntities[x][y];
     }
 
     /**
-     * set texture according to id
-     * @param id
+     * check if mouse move within game boundary (0~width*Entity.WIDTH,0~Entity.HEIGHT)
+     * @return true if in the boundary
      */
-    private BufferedImage getTexture(int id) {
-        switch (id){
-            case 0:
-                texture= Assets.tree;
-                break;
-            case 1:
-                texture= Assets.dirt;
-                break;
-            case 2:
-                texture= Assets.lizard;
-                break;
-            case 3:
-                texture= Assets.wall;
-                break;
-            case 4:
-                texture= Assets.grass;
-                break;
-            case 5:
-                texture= Assets.stone;
-                break;
-            default:
-                texture= Assets.grass;
-        }
-
-        return texture;
+    private boolean checkBoundary(int x,int y){
+        return bounds.contains(x,y);
     }
 }
