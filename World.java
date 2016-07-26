@@ -1,6 +1,7 @@
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
 
 
 /**
@@ -9,12 +10,13 @@ import java.awt.image.BufferedImage;
 public class World {
     private int width, height;  //number of tiles
     private int mouseX,mouseY;
-    private BufferedImage texture;
     private Game game;
     private int[][] boardIDs;
     private Entity[][] boardEntities;
     private Entity currentEntity;
     private Rectangle bounds;
+    private ArrayList<Entity> adjEntityNeighborList;
+    private ArrayList<Entity> currentEntityNeighborList;
 
     boolean pressedInBoundary=false;
 
@@ -28,6 +30,9 @@ public class World {
         init();
 
         bounds=new Rectangle(0,0,width*Entity.WIDTH,height*Entity.HEIGHT);
+
+        adjEntityNeighborList=new ArrayList<>();
+        currentEntityNeighborList=new ArrayList<>();
     }
 
     /**
@@ -60,7 +65,9 @@ public class World {
 
         }
 
-        switchEntity();
+      //  switchEntity();
+        if(currentEntity!=null && game.getMouseManager().right==true)
+            realSwitchToRight();
     }
 
     /**
@@ -174,5 +181,89 @@ public class World {
      */
     private boolean checkBoundary(int x,int y){
         return bounds.contains(x,y);
+    }
+
+    /**
+     * switch currentEntity with rightEntity,if a texture match is formed b/w currentEntity and the rightEntity's the up and down entities
+     //switch first, if after switch, no match formed, switch back(haven't implemented)
+     * empty neighborTextureIds list
+     */
+    private void realSwitchToRight(){
+            if (canSwitch()){
+                switchEntity();
+            }else{
+                game.getMouseManager().right=false;
+            }
+        adjEntityNeighborList.clear();
+        currentEntityNeighborList.clear();
+
+    }
+
+
+    /**
+     * if the right switch can form a match
+     * if the size of neighbors >=3,return ture
+     * @return  true, if switch can form a match
+     */
+    private boolean canSwitch(){
+        if(!checkBoundary(currentEntity.getX()+Entity.WIDTH,currentEntity.getY()))
+            return false;
+        return getMoveRightPatternNeighbors_2().size()>=2 || getMoveRightPatternTwoNeighbors_1().size()>=2;
+    }
+
+    /**
+     * Given currentEntity and direction, find same pattern neighbors
+     * @return a list of entity that will form a match with currentEntity
+     */
+    ArrayList<Entity> getMoveRightPatternNeighbors_2(){
+        int x=currentEntity.getX();
+        int y=currentEntity.getY();
+
+        Entity rightEntity=boardEntities[x/Entity.WIDTH +1][y/Entity.HEIGHT];
+
+        //check up
+        for(int i=y/Entity.HEIGHT-1;i>=0;i--){
+            if(boardEntities[x/Entity.WIDTH][i].getId()==rightEntity.getId())
+                currentEntityNeighborList.add(boardEntities[x/Entity.WIDTH][i]);
+            else
+                break;
+        }
+
+        //check down
+        for(int j=y/Entity.HEIGHT+1;j<height;j++){
+            if(boardEntities[x/Entity.WIDTH][j].getId()==rightEntity.getId())
+                currentEntityNeighborList.add(boardEntities[x/Entity.WIDTH][j]);
+            else
+                break;
+        }
+
+        return currentEntityNeighborList;
+    }
+
+    /**
+     * a list of entities align with switchedEntity have the same pattern with currentEntity
+     * @return a list of entity that will form a match with currentEntity
+     */
+    ArrayList<Entity> getMoveRightPatternTwoNeighbors_1(){
+        int x=currentEntity.getX();
+        int y=currentEntity.getY();
+
+        //check up
+        for(int i=y/Entity.HEIGHT-1;i>=0;i--){
+            if(boardEntities[x/Entity.WIDTH +1][i].getId()==currentEntity.getId())
+                adjEntityNeighborList.add(boardEntities[x/Entity.WIDTH +1][i]);
+            else
+                break;
+        }
+
+        //check down
+        for(int j=y/Entity.HEIGHT+1;j<height;j++){
+            if(boardEntities[x/Entity.WIDTH +1][j].getId()==currentEntity.getId())
+                adjEntityNeighborList.add(boardEntities[x/Entity.WIDTH +1][j]);
+            else
+                break;
+        }
+
+        return adjEntityNeighborList;
     }
 }
