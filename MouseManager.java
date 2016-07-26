@@ -6,7 +6,7 @@ import java.awt.event.MouseMotionListener;
  * Created by shuorenwang on 2016-07-24.
  */
 public class MouseManager implements MouseListener,MouseMotionListener {
-    private boolean pressed,dragged;
+    private boolean pressed;
 
     private int x, y;
     private int preX;
@@ -78,8 +78,6 @@ public class MouseManager implements MouseListener,MouseMotionListener {
 
     @Override
     public void mouseDragged(MouseEvent e) {
-        dragged=true;
-        System.out.println("Drag is true");
     }
 
     @Override

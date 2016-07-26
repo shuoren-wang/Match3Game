@@ -1,3 +1,4 @@
+
 import java.awt.*;
 import java.awt.image.BufferStrategy;
 
@@ -17,7 +18,7 @@ public class Game implements Runnable{
     private MouseManager mouseManager;
 
     Game(){
-        world=new World(this);
+        world=new World(this,"res/level1.txt");
         mouseManager=new MouseManager();
         init();
 
@@ -30,6 +31,8 @@ public class Game implements Runnable{
         gui.addMouseMotionListener(mouseManager);
         gui.getCanvas().addMouseListener(mouseManager);
         gui.getCanvas().addMouseMotionListener(mouseManager);
+
+        Assets.init();
 
         th=new Thread(this);
         th.start();
@@ -56,7 +59,6 @@ public class Game implements Runnable{
         //Draw Here
 
 
-
         world.render(g);
 
         //End Draw
@@ -72,9 +74,6 @@ public class Game implements Runnable{
         }
     }
 
-    public Graphics getGraphics(){
-        return g;
-    }
 
     public MouseManager getMouseManager() {
         return mouseManager;
