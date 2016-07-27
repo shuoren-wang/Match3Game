@@ -9,12 +9,12 @@ import java.util.ArrayList;
  */
 public class World {
     private int width, height;  //number of tiles
-    private int arrX,arrY;        //column, row
     private int mouseX, mouseY;
     private Game game;
     private int[][] boardIDs;
     private Entity[][] boardEntities;
     private Entity currentEntity;
+    private Entity switchedEntity;
     private Rectangle bounds;
     private ArrayList<Entity> neighborList;
 
@@ -58,20 +58,25 @@ public class World {
 
             currentEntity.tick();
 
-            if (currentEntity.isRight()){
-                realXSwitch(Direction.RIGHT.getX(), Direction.RIGHT.getY());
+            if (currentEntity.isRight() && checkBoundary(currentEntity.getX()+Entity.WIDTH,currentEntity.getY())){
+
+                setSwitchedEntity(Direction.RIGHT);
+                trySwitch(Direction.RIGHT);
                 return;
             }
-            if (currentEntity.isLeft()){
-                realXSwitch(Direction.LEFT.getX(), Direction.LEFT.getY());
+            if (currentEntity.isLeft()&& checkBoundary(currentEntity.getX()-Entity.WIDTH,currentEntity.getY())){
+                setSwitchedEntity(Direction.LEFT);
+                trySwitch(Direction.LEFT);
                 return;
             }
-            if (currentEntity.isUp()){
-                realYSwitch(Direction.UP.getX(), Direction.UP.getY());
+            if (currentEntity.isUp() && checkBoundary(currentEntity.getX(),currentEntity.getY()-Entity.HEIGHT)){
+                setSwitchedEntity(Direction.UP);
+                trySwitch(Direction.UP);
                 return;
             }
-            if (currentEntity.isDown()){
-                realYSwitch(Direction.DOWN.getX(), Direction.DOWN.getY());
+            if (currentEntity.isDown() && checkBoundary(currentEntity.getX(),currentEntity.getY()+Entity.HEIGHT)){
+                setSwitchedEntity(Direction.DOWN);
+                trySwitch(Direction.DOWN);
                 return;
             }
         }
@@ -98,11 +103,7 @@ public class World {
      * switch current entity with the adjacent entity according to mouse move direction
      */
     private void switchEntity(int xChange, int yChange) {
-
-
-
         if (currentEntity.isRight()) {
-            System.out.println("switchEntity to right");
             swap(xChange, yChange);
             currentEntity.setRightFalse();
             currentEntity=null;
@@ -226,111 +227,77 @@ public class World {
      * //switch first, if after switch, no match formed, switch back(haven't implemented)
      * empty neighborTextureIds list
      */
-    private void realXSwitch(int xChange, int yChange) {
+    private void trySwitch(Direction dir) {
         if(currentEntity==null)
             return;
 
-        if (canHorizontalSwitch(xChange, yChange)) {
-            switchEntity(xChange, yChange);
+        if (canSwitch(dir.getX(), dir.getY())) {
+            switchEntity(dir.getX(), dir.getY());
         } else {
             currentEntity.setRightFalse();
             currentEntity.setLeftFalse();
-        }
-        neighborList.clear();
-    }
-
-    /**
-     * switch currentEntity with rightEntity,if a texture match is formed b/w currentEntity and the rightEntity's the up and down entities
-     * //switch first, if after switch, no match formed, switch back(haven't implemented)
-     * empty neighborTextureIds list
-     */
-    private void realYSwitch(int xChange, int yChange) {
-        if (canVerticalSwitch(xChange, yChange)) {
-            switchEntity(xChange, yChange);
-        } else {
-            currentEntity.setDownFalse();
             currentEntity.setUpFalse();
+            currentEntity.setDownFalse();
+        }
+        neighborList.clear();
+    }
+
+
+
+    /**
+     * if the right/left/up/down switch can form a match
+     * if the size of neighbors >=2,return true
+     * clear neighbor list
+     * @return true, if switch can form a match
+     */
+    private boolean canSwitch(int xChange, int yChange) {
+
+        if (!checkBoundary(switchedEntity.getX(),switchedEntity.getY()))
+            return false;
+
+        if (enoughNeighbors(currentEntity,switchedEntity))
+            return true;
+
+        if (enoughNeighbors(switchedEntity,currentEntity))
+            return true;
+
+        return false;
+
+    }
+
+
+    /**
+     *
+     * @return true if there is a match after switch e1,e2
+     */
+    private boolean enoughNeighbors(Entity e1,Entity e2){
+
+        if (getVerticalNeighbors(e1,e2).size()>=2){
+            neighborList.clear();
+            return true;
         }
 
         neighborList.clear();
 
-    }
-
-
-    /**
-     * if the right/left switch can form a match
-     * if the size of neighbors >=2,return true
-     *
-     * @return true, if switch can form a match
-     */
-    private boolean canHorizontalSwitch(int xChange, int yChange) {
-
-        if (!checkBoundary(currentEntity.getX() + xChange * Entity.WIDTH, currentEntity.getY() + yChange * Entity.HEIGHT))
-            return false;
-
-        if (getXMoveVerticalPatternNeighbors(currentEntity, boardEntities[getArrX() + xChange][getArrY() + yChange]).size() >= 2)
+        if(getHorizontalNeighbors(e1,e2).size()>=2){
+            neighborList.clear();
             return true;
+        }
 
         neighborList.clear();
-
-        if (getXMoveVerticalPatternNeighbors(boardEntities[getArrX() + xChange][getArrY() + yChange], currentEntity).size() >= 2)
-            return true;
-
-        neighborList.clear();
-
-        if (getXMoveHorizontalPatternNeighbors(currentEntity, boardEntities[getArrX() + xChange][getArrY() + yChange]).size() >= 2)
-            return true;
-
-        neighborList.clear();
-
-        if (getXMoveHorizontalPatternNeighbors(boardEntities[getArrX() + xChange][getArrY() + yChange], currentEntity).size() >= 2)
-            return true;
 
         return false;
+
+
     }
-
-
     /**
-     * if the up/down switch can form a match
-     * if the size of neighbors >=2,return true
-     *
-     * @return true, if switch can form a match
-     */
-    private boolean canVerticalSwitch(int xChange, int yChange) {
-
-        if (!checkBoundary(currentEntity.getX() + xChange * Entity.WIDTH, currentEntity.getY() + yChange * Entity.HEIGHT))
-            return false;
-
-        if (getYMoveHorizontalPatternNeighbors(currentEntity, boardEntities[getArrX() + xChange][getArrY() + yChange]).size() >= 2)
-            return true;
-
-        neighborList.clear();
-
-        if (getYMoveHorizontalPatternNeighbors(boardEntities[getArrX() + xChange][getArrY() + yChange], currentEntity).size() >= 2)
-            return true;
-
-        neighborList.clear();
-
-        if (getYMoveVerticalPatternNeighbors(currentEntity, boardEntities[getArrX() + xChange][getArrY() + yChange]).size() >= 2)
-            return true;
-
-        neighborList.clear();
-
-        if (getYMoveVerticalPatternNeighbors(boardEntities[getArrX() + xChange][getArrY() + yChange], currentEntity).size() >= 2)
-            return true;
-
-        return false;
-    }
-
-    /**
-     * a list of entities align with currentEntity have the same pattern with rightEntity
-     *
-     * @return a list of entity that will form a match with rightEntity
+     * check same pattern entity about the neibor of e
+     * @return list of entities that will form a match vertically
      */
 
-    ArrayList<Entity> getXMoveVerticalPatternNeighbors(Entity e1, Entity e2) {
+    ArrayList<Entity> getVerticalNeighbors(Entity e1,Entity e2) {
         int x = e1.getX();
-        int y = e1.getY();
+        int y = Math.min(e1.getY(),e2.getY());
 
         //check up
         for (int i = y / Entity.HEIGHT - 1; i >= 0; i--) {
@@ -340,6 +307,7 @@ public class World {
                 break;
         }
 
+        y = Math.max(e1.getY(),e2.getY());
         //check down
         for (int j = y / Entity.HEIGHT + 1; j < height; j++) {
             if (boardEntities[x / Entity.WIDTH][j].getId() == e2.getId())
@@ -352,53 +320,8 @@ public class World {
     }
 
 
-    /**
-     * a list of entities align with rightEntity have the same pattern with currentEntity
-     *
-     * @return a list of entity that will form a match with currentEntity
-     */
-    ArrayList<Entity> getXMoveHorizontalPatternNeighbors(Entity e1, Entity e2) {
-        int x = e1.getX();
-        int y = e1.getY();
-
-        //check right
-        for (int j = x / Entity.WIDTH + 2; j < width; j++) {
-            if (boardEntities[j][y / Entity.HEIGHT].getId() == e1.getId())
-                neighborList.add(boardEntities[j][y / Entity.HEIGHT]);
-            else
-                break;
-        }
-
-
-        //if right does not have a match, empty neighborList
-        if (neighborList.size() < 2) {
-            neighborList.clear();
-        } else {
-            return neighborList;
-        }
-
-
-        //check left
-        x = e2.getX();
-        y = e2.getY(); //not change
-        for (int j = x / Entity.WIDTH - 1; j >= 0; j--) {
-            if (boardEntities[j][y / Entity.HEIGHT].getId() == e2.getId())
-                neighborList.add(boardEntities[j][y / Entity.HEIGHT]);
-            else
-                break;
-        }
-        return neighborList;
-    }
-
-
-    /**
-     * a list of entities align with currentEntity have the same pattern with rightEntity
-     *
-     * @return a list of entity that will form a match with rightEntity
-     */
-
-    ArrayList<Entity> getYMoveHorizontalPatternNeighbors(Entity e1, Entity e2) {
-        int x = e1.getX();
+    ArrayList<Entity> getHorizontalNeighbors(Entity e1, Entity e2) {
+        int x = Math.min(e1.getX(),e2.getX());
         int y = e1.getY();
 
         //check left
@@ -409,6 +332,7 @@ public class World {
                 break;
         }
 
+        x = Math.max(e1.getX(),e2.getX());
         //check right
         for (int j = x / Entity.WIDTH + 1; j < width; j++) {
             if (boardEntities[j][y / Entity.HEIGHT].getId() == e2.getId())
@@ -420,44 +344,13 @@ public class World {
         return neighborList;
     }
 
-
     /**
-     * a list of entities align with rightEntity have the same pattern with currentEntity
-     *
-     * @return a list of entity that will form a match with currentEntity
+     * set switchedEntity
+     * @param dir currentEntity move direction
      */
-    ArrayList<Entity> getYMoveVerticalPatternNeighbors(Entity e1, Entity e2) {
-        int x = e1.getX();
-        int y = e1.getY();
-
-        //check down
-        for (int j = y / Entity.HEIGHT + 2; j < height; j++) {
-            if (boardEntities[x / Entity.WIDTH][j].getId() == e1.getId())
-                neighborList.add(boardEntities[x / Entity.WIDTH][j]);
-            else
-                break;
-        }
-
-
-        //if down does not have a match, empty neighborList
-        if (neighborList.size() < 2) {
-            neighborList.clear();
-        } else {
-            return neighborList;
-        }
-
-        //check up
-        x = e2.getX();
-        y = e2.getY(); //not change
-        for (int j = y / Entity.HEIGHT - 1; j >= 0; j--) {
-            if (boardEntities[x / Entity.WIDTH][j].getId() == e2.getId())
-                neighborList.add(boardEntities[x / Entity.WIDTH][j]);
-            else
-                break;
-        }
-        return neighborList;
+    public void setSwitchedEntity(Direction dir) {
+        switchedEntity=boardEntities[getArrX()+dir.getX()][getArrY()+dir.getY()];
     }
-
 
     /**
      * @return currentEntity array column #
