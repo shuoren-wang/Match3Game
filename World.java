@@ -63,10 +63,14 @@ public class World {
         }
 
         //  switchEntity();
-        if (currentEntity != null && game.getMouseManager().right == true)
-            realHorizontalSwitch(Direction.RIGHT.getX(), Direction.RIGHT.getY());
-        if (currentEntity != null && game.getMouseManager().left == true)
-            realHorizontalSwitch(Direction.LEFT.getX(), Direction.LEFT.getY());
+        if (currentEntity != null && game.getMouseManager().right)
+            realXSwitch(Direction.RIGHT.getX(), Direction.RIGHT.getY());
+        if (currentEntity != null && game.getMouseManager().left)
+            realXSwitch(Direction.LEFT.getX(), Direction.LEFT.getY());
+        if (currentEntity != null && game.getMouseManager().up)
+            realYSwitch(Direction.UP.getX(), Direction.UP.getY());
+        if (currentEntity != null && game.getMouseManager().down)
+            realYSwitch(Direction.DOWN.getX(), Direction.DOWN.getY());
 
     }
 
@@ -185,25 +189,43 @@ public class World {
         return bounds.contains(x, y);
     }
 
+
     /**
      * switch currentEntity with rightEntity,if a texture match is formed b/w currentEntity and the rightEntity's the up and down entities
      * //switch first, if after switch, no match formed, switch back(haven't implemented)
      * empty neighborTextureIds list
      */
-    private void realHorizontalSwitch(int xChange, int yChange) {
+    private void realXSwitch(int xChange, int yChange) {
         if (canHorizontalSwitch(xChange, yChange)) {
             switchEntity(xChange, yChange);
         } else {
             game.getMouseManager().right = false;
+            game.getMouseManager().left= false;
         }
+        neighborList.clear();
+    }
+
+    /**
+     * switch currentEntity with rightEntity,if a texture match is formed b/w currentEntity and the rightEntity's the up and down entities
+     * //switch first, if after switch, no match formed, switch back(haven't implemented)
+     * empty neighborTextureIds list
+     */
+    private void realYSwitch(int xChange, int yChange) {
+        if (canVerticalSwitch(xChange, yChange)) {
+            switchEntity(xChange, yChange);
+        } else {
+            game.getMouseManager().up = false;
+            game.getMouseManager().down= false;
+        }
+
         neighborList.clear();
 
     }
 
 
     /**
-     * if the right switch can form a match
-     * if the size of neighbors >=3,return ture
+     * if the right/left switch can form a match
+     * if the size of neighbors >=2,return true
      *
      * @return true, if switch can form a match
      */
@@ -228,6 +250,39 @@ public class World {
         neighborList.clear();
 
         if (getXMoveHorizontalPatternNeighbors(boardEntities[currentEntity.getX() / Entity.WIDTH + xChange][currentEntity.getY() / Entity.HEIGHT + yChange],currentEntity).size() >= 2)
+            return true;
+
+        return false;
+    }
+
+
+    /**
+     * if the up/down switch can form a match
+     * if the size of neighbors >=2,return true
+     *
+     * @return true, if switch can form a match
+     */
+    private boolean canVerticalSwitch(int xChange, int yChange) {
+
+        if (!checkBoundary(currentEntity.getX() + xChange * Entity.WIDTH, currentEntity.getY() + yChange * Entity.HEIGHT))
+            return false;
+
+        if (getYMoveHorizontalPatternNeighbors(currentEntity, boardEntities[currentEntity.getX() / Entity.WIDTH + xChange][currentEntity.getY() / Entity.HEIGHT + yChange]).size() >= 2)
+            return true;
+
+        neighborList.clear();
+
+        if (getYMoveHorizontalPatternNeighbors(boardEntities[currentEntity.getX() / Entity.WIDTH + xChange][currentEntity.getY() / Entity.HEIGHT + yChange], currentEntity).size() >= 2)
+            return true;
+
+        neighborList.clear();
+
+        if (getYMoveVerticalPatternNeighbors(currentEntity,boardEntities[currentEntity.getX() / Entity.WIDTH + xChange][currentEntity.getY() / Entity.HEIGHT + yChange]).size() >= 2)
+            return true;
+
+        neighborList.clear();
+
+        if (getYMoveVerticalPatternNeighbors(boardEntities[currentEntity.getX() / Entity.WIDTH + xChange][currentEntity.getY() / Entity.HEIGHT + yChange],currentEntity).size() >= 2)
             return true;
 
         return false;
@@ -294,6 +349,74 @@ public class World {
         for (int j = x / Entity.WIDTH - 2; j >= 0; j--) {
             if (boardEntities[j][y / Entity.HEIGHT].getId() == e2.getId())
                 neighborList.add(boardEntities[j][y / Entity.HEIGHT]);
+            else
+                break;
+        }
+        return neighborList;
+    }
+
+
+    /**
+     * a list of entities align with currentEntity have the same pattern with rightEntity
+     *
+     * @return a list of entity that will form a match with rightEntity
+     */
+
+    ArrayList<Entity> getYMoveHorizontalPatternNeighbors(Entity e1, Entity e2) {
+        int x = e1.getX();
+        int y = e1.getY();
+
+        //check left
+        for (int i = x / Entity.WIDTH - 1; i >= 0; i--) {
+            if (boardEntities[i][y / Entity.HEIGHT].getId() == e2.getId())
+                neighborList.add(boardEntities[i][y / Entity.HEIGHT]);
+            else
+                break;
+        }
+
+        //check right
+        for (int j = x / Entity.WIDTH + 1; j < width; j++) {
+            if (boardEntities[j][y / Entity.HEIGHT].getId() == e2.getId())
+                neighborList.add(boardEntities[j][y / Entity.HEIGHT]);
+            else
+                break;
+        }
+
+        return neighborList;
+    }
+
+
+    /**
+     * a list of entities align with rightEntity have the same pattern with currentEntity
+     *
+     * @return a list of entity that will form a match with currentEntity
+     */
+    ArrayList<Entity> getYMoveVerticalPatternNeighbors(Entity e1,Entity e2) {
+        int x = e1.getX();
+        int y = e1.getY();
+
+        //check down
+        for (int j = y / Entity.HEIGHT + 2; j < height; j++) {
+            if (boardEntities[x / Entity.WIDTH][j].getId() == e1.getId())
+                neighborList.add(boardEntities[x / Entity.WIDTH][j]);
+            else
+                break;
+        }
+
+
+        //if down does not have a match, empty neighborList
+        if (neighborList.size() < 2) {
+            neighborList.clear();
+        } else {
+            return neighborList;
+        }
+
+        //check up
+        x = e2.getX();
+        y = e2.getY(); //not change
+        for (int j = y / Entity.HEIGHT - 2; j >= 0; j--) {
+            if (boardEntities[x / Entity.WIDTH][j].getId() == e2.getId())
+                neighborList.add(boardEntities[x / Entity.WIDTH][j]);
             else
                 break;
         }
