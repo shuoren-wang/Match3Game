@@ -1,3 +1,4 @@
+package game;
 
 import java.awt.*;
 import java.awt.image.BufferStrategy;
@@ -15,9 +16,11 @@ public class Game implements Runnable{
 
     private World world;
 
+
     private MouseManager mouseManager;
 
-    Game(){
+
+    public Game(){
         world=new World(this,"res/level1.txt");
         mouseManager=new MouseManager();
         init();
@@ -74,6 +77,12 @@ public class Game implements Runnable{
         }
     }
 
+    //Getters and Setters
+
+
+    public World getWorld() {
+        return world;
+    }
 
     public MouseManager getMouseManager() {
         return mouseManager;

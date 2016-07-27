@@ -1,7 +1,7 @@
+package game;
+
 import javax.swing.*;
 import java.awt.*;
-import java.awt.image.BufferStrategy;
-import java.awt.image.VolatileImage;
 
 /**
  * Created by shuorenwang on 2016-07-24.

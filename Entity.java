@@ -1,3 +1,4 @@
+package game;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -13,8 +14,7 @@ public class Entity{
     protected Rectangle bounds;
     public BufferedImage texture=Assets.grass;
     protected int id;
-    private boolean pressed;
-    protected boolean moveUp, moveDown,moveLeft,moveRight;
+    protected boolean up, down, left, right;
 
 
     public Entity(int x, int y, int id, Game game){
@@ -25,37 +25,42 @@ public class Entity{
         Assets.init();
         setTexture(id);
 
-        pressed=false;
-        moveUp=false;
-        moveDown=false;
-        moveLeft=false;
-        moveRight=false;
+        up =false;
+        down =false;
+        left =false;
+        right =false;
 
 
         bounds=new Rectangle(0,0,WIDTH,HEIGHT);
     }
 
     private void getInput(){
-        pressed=false;
-        moveUp=false;
-        moveDown=false;
-        moveLeft=false;
-        moveRight=false;
+        up =false;
+        down =false;
+        left =false;
+        right =false;
 
-        if(game.getMouseManager().isPressed())
-            pressed=true;
-        if(game.getMouseManager().left)
-            moveLeft=true;
-        if(game.getMouseManager().right)
-            moveRight=true;
-        if(game.getMouseManager().up)
-            moveUp=true;
-        if(game.getMouseManager().down)
-            moveDown=true;
-
+        if(game.getMouseManager().left){
+            left =true;
+            return;
+        }
+        if(game.getMouseManager().right){
+            right =true;
+            return;
+        }
+        if(game.getMouseManager().up){
+            up =true;
+            return;
+        }
+        if(game.getMouseManager().down){
+            down =true;
+            return;
+        }
     }
 
-    public void tick(){}
+    public void tick(){
+        getInput();
+    }
 
     public void render(Graphics g){
         g.drawImage(texture,x,y,WIDTH,HEIGHT,null);
@@ -134,9 +139,6 @@ public class Entity{
     }
 
     //GETTERS and SETTERS
-    public void setTexture(BufferedImage texture) {
-        this.texture = texture;
-    }
 
     public int getId() {
         return id;
@@ -146,43 +148,45 @@ public class Entity{
         return bounds;
     }
 
-    public boolean isPressed() {
-        return pressed;
+    public boolean isUp() {
+        return up;
     }
 
-    public void setPressed(boolean pressed) {
-        this.pressed = pressed;
+    /**
+     * Set up false
+     */
+    public void setUpFalse() {  up = false;}
+
+    public boolean isDown() {
+        return down;
     }
 
-    public boolean isMoveUp() {
-        return moveUp;
+    /**
+     * set down false
+     */
+    public void setDownFalse() {
+        down =false;
     }
 
-    public void setMoveUp(boolean moveUp) {
-        this.moveUp = moveUp;
+    public boolean isLeft() {
+        return left;
     }
 
-    public boolean isMoveDown() {
-        return moveDown;
+    /**
+     * set MoveLeft false
+     */
+    public void setLeftFalse() {
+        left = false;
     }
 
-    public void setMoveDown(boolean moveDown) {
-        this.moveDown = moveDown;
+    public boolean isRight() {
+        return right;
     }
 
-    public boolean isMoveLeft() {
-        return moveLeft;
-    }
-
-    public void setMoveLeft(boolean moveLeft) {
-        this.moveLeft = moveLeft;
-    }
-
-    public boolean isMoveRight() {
-        return moveRight;
-    }
-
-    public void setMoveRight(boolean moveRight) {
-        this.moveRight = moveRight;
+    /**
+     * set right false
+     */
+    public void setRightFalse() {
+        right =false;
     }
 }
