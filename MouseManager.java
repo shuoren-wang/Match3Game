@@ -126,4 +126,6 @@ public class MouseManager implements MouseListener,MouseMotionListener {
     public void setPressed(boolean pressed) {
         this.pressed = pressed;
     }
+
+
 }
