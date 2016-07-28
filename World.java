@@ -16,8 +16,11 @@ public class World {
     private Entity currentEntity;
     private Entity switchedEntity;
     private Rectangle bounds;
-    private ArrayList<Entity> horizontalNeighborList;
-    private ArrayList<Entity> verticalNeighborList;
+    private ArrayList<Entity> horizontalNeighborList1;
+    private ArrayList<Entity> horizontalNeighborList2;
+    private ArrayList<Entity> verticalNeighborList1;
+    private ArrayList<Entity> verticalNeighborList2;
+
 
     boolean pressedInBoundary = false;
 
@@ -31,8 +34,10 @@ public class World {
 
         bounds = new Rectangle(0, 0, width * Entity.WIDTH, height * Entity.HEIGHT);
 
-        verticalNeighborList = new ArrayList<>();
-        horizontalNeighborList=new ArrayList<>();
+        verticalNeighborList1 = new ArrayList<>();
+        verticalNeighborList2 = new ArrayList<>();
+        horizontalNeighborList1 = new ArrayList<>();
+        horizontalNeighborList2 = new ArrayList<>();
     }
 
     /**
@@ -59,28 +64,66 @@ public class World {
 
             currentEntity.tick();
 
-            if (currentEntity.isRight() && checkBoundary(currentEntity.getX()+Entity.WIDTH,currentEntity.getY())){
+            if (currentEntity.isDown() || currentEntity.isLeft() || currentEntity.isRight() || currentEntity.isUp()) {
+                if (currentEntity.isRight() && checkBoundary(currentEntity.getX() + Entity.WIDTH, currentEntity.getY())) {
+                    setSwitchedEntity(Direction.RIGHT);
+                    trySwitch(Direction.RIGHT);
 
-                setSwitchedEntity(Direction.RIGHT);
-                trySwitch(Direction.RIGHT);
-                return;
+                } else if (currentEntity.isLeft() && checkBoundary(currentEntity.getX() - Entity.WIDTH, currentEntity.getY())) {
+                    setSwitchedEntity(Direction.LEFT);
+                    trySwitch(Direction.LEFT);
+
+                } else if (currentEntity.isUp() && checkBoundary(currentEntity.getX(), currentEntity.getY() - Entity.HEIGHT)) {
+                    setSwitchedEntity(Direction.UP);
+                    trySwitch(Direction.UP);
+
+                } else if (currentEntity.isDown() && checkBoundary(currentEntity.getX(), currentEntity.getY() + Entity.HEIGHT)) {
+                    setSwitchedEntity(Direction.DOWN);
+                    trySwitch(Direction.DOWN);
+                }
+
+                delMatchedLists();
+
+                currentEntity = null;
+                switchedEntity = null;
             }
-            if (currentEntity.isLeft()&& checkBoundary(currentEntity.getX()-Entity.WIDTH,currentEntity.getY())){
-                setSwitchedEntity(Direction.LEFT);
-                trySwitch(Direction.LEFT);
-                return;
-            }
-            if (currentEntity.isUp() && checkBoundary(currentEntity.getX(),currentEntity.getY()-Entity.HEIGHT)){
-                setSwitchedEntity(Direction.UP);
-                trySwitch(Direction.UP);
-                return;
-            }
-            if (currentEntity.isDown() && checkBoundary(currentEntity.getX(),currentEntity.getY()+Entity.HEIGHT)){
-                setSwitchedEntity(Direction.DOWN);
-                trySwitch(Direction.DOWN);
-                return;
-            }
+
         }
+
+    }
+
+
+    /**
+     * delete tiles in all the neighbor lists
+     */
+    private void delMatchedLists() {
+        delMatchedList(verticalNeighborList1);
+        delMatchedList(verticalNeighborList2);
+        delMatchedList(horizontalNeighborList1);
+        delMatchedList(horizontalNeighborList2);
+
+        verticalNeighborList1.clear();//////////////////////
+        horizontalNeighborList1.clear();////////////////////
+        verticalNeighborList2.clear();//////////////////////
+        horizontalNeighborList2.clear();////////////////////
+
+    }
+
+    /**
+     * delete matched tiles in the neighborList
+     *
+     * @param neighborList
+     */
+    private void delMatchedList(ArrayList<Entity> neighborList) {
+        int x;
+        int y;
+
+        if (neighborList != null)
+            for (int i = 0; i < neighborList.size(); i++) {
+                x = neighborList.get(i).getX() / Entity.WIDTH;
+                y = neighborList.get(i).getY() / Entity.HEIGHT;
+                boardEntities[x][y] = null;
+            }
 
     }
 
@@ -107,23 +150,22 @@ public class World {
         if (currentEntity.isRight()) {
             swap(xChange, yChange);
             currentEntity.setRightFalse();
-        }else if (currentEntity.isLeft()) {
+        } else if (currentEntity.isLeft()) {
             swap(xChange, yChange);
             currentEntity.setLeftFalse();
-        }else if (currentEntity.isUp()) {
+        } else if (currentEntity.isUp()) {
             swap(xChange, yChange);
             currentEntity.setUpFalse();
-        }else if (currentEntity.isDown()) {
+        } else if (currentEntity.isDown()) {
             swap(xChange, yChange);
             currentEntity.setDownFalse();
         }
-        currentEntity=null;
+
     }
 
     /**
      * if currentEntity does not exist or currentEntity is the most left entity, return;
      * otherwise, exchange the position of currentEntity with its left:
-     * switch x coordinate
      * switch boardEntities[][] position
      * switch boardIDs (don't have to)
      *
@@ -140,13 +182,6 @@ public class World {
 
         Entity tempCurrentEntity = new Entity(currentEntity.getX(), currentEntity.getY(), currentEntity.getId(), game);
         Entity exchangeEntity = boardEntities[getArrX() + xChange][getArrY() + yChange];
-
-        //switch x coordinate
-        tempCurrentEntity.setX(exchangeEntity.getX());
-        tempCurrentEntity.setY(exchangeEntity.getY());
-
-        exchangeEntity.setX(currentEntity.getX());
-        exchangeEntity.setY(currentEntity.getY());
 
         //switch boardEntities[][] position
         boardEntities[getArrX()][getArrY()] = exchangeEntity;
@@ -188,7 +223,7 @@ public class World {
      * empty neighborTextureIds list
      */
     private void trySwitch(Direction dir) {
-        if(currentEntity==null)
+        if (currentEntity == null)
             return;
 
         if (canSwitch()) {
@@ -199,72 +234,83 @@ public class World {
             currentEntity.setUpFalse();
             currentEntity.setDownFalse();
         }
-        verticalNeighborList.clear();//////////////////////
-        horizontalNeighborList.clear();////////////////////
-    }
 
+    }
 
 
     /**
      * if the right/left/up/down switch can form a match
-     * if the size of neighbors >=2,return true
-     * clear neighbor list
+     * if the size of neighbors >=3 (including the currentEntity or switchedEntity),return true
+     *
      * @return true, if switch can form a match
      */
     private boolean canSwitch() {
 
-        if (!checkBoundary(switchedEntity.getX(),switchedEntity.getY()))
+        if (!checkBoundary(switchedEntity.getX(), switchedEntity.getY()))
             return false;
 
-        if (enoughNeighbors(currentEntity,switchedEntity))
+        setNeighborLists();
+
+        if (horizontalNeighborList1.size() >= 3 || verticalNeighborList1.size() >= 3 ||
+                horizontalNeighborList2.size() >= 3 || verticalNeighborList2.size() >= 3) {
             return true;
-
-        horizontalNeighborList.clear();
-        verticalNeighborList.clear();
-
-        if (enoughNeighbors(switchedEntity,currentEntity))
-            return true;
-
-
-        horizontalNeighborList.clear();
-        verticalNeighborList.clear();
-
+        }
         return false;
 
     }
 
 
     /**
+     * clear all neighborList whose size < 2
+     * add matched entity(currentEntity or switchedEntity) to cooresponding neighborlist
+     * switch coordinate of currentEntity and switchedEntity
+     */
+    private void setNeighborLists() {
+
+        if (getVerticalNeighbors(verticalNeighborList1, currentEntity, switchedEntity).size() >= 2) {
+            verticalNeighborList1.add(switchedEntity);
+        } else {
+            verticalNeighborList1.clear();
+        }
+
+        if (getHorizontalNeighbors(horizontalNeighborList1, currentEntity, switchedEntity).size() >= 2) {
+            horizontalNeighborList1.add(switchedEntity);
+        } else {
+            horizontalNeighborList1.clear();
+        }
+
+        if (getHorizontalNeighbors(horizontalNeighborList2, switchedEntity, currentEntity).size() >= 2) {
+            horizontalNeighborList2.add(currentEntity);
+        } else {
+            horizontalNeighborList2.clear();
+        }
+
+        if (getVerticalNeighbors(verticalNeighborList2, switchedEntity, currentEntity).size() >= 2) {
+            verticalNeighborList2.add(currentEntity);
+        } else {
+            verticalNeighborList2.clear();
+        }
+    }
+
+
+
+
+    /**
+     * check match on vertical direction
      *
-     * @return true if there is a match after switch e1,e2
+     * @param verticalNeighborList
+     * @param e1                   whose neighbor need to match
+     * @param e2                   entity need to match
+     * @return list of match entities
      */
-    private boolean enoughNeighbors(Entity e1,Entity e2){
-
-        if (getVerticalNeighbors(e1,e2).size()>=2){
-            return true;
-        }
-
-        if(getHorizontalNeighbors(e1,e2).size()>=2){
-            return true;
-        }
-
-        return false;
-
-
-    }
-    /**
-     * check same pattern entity about the neibor of e
-     * @return list of entities that will form a match vertically
-     */
-
-    ArrayList<Entity> getVerticalNeighbors(Entity e1,Entity e2) {
+    ArrayList<Entity> getVerticalNeighbors(ArrayList<Entity> verticalNeighborList, Entity e1, Entity e2) {
         int x = e1.getX();
         int y = e1.getY();
 
         //check up
 
         for (int i = y / Entity.HEIGHT - 1; i >= 0; i--) {
-            if (boardEntities[x / Entity.WIDTH][i]!=e2 && boardEntities[x / Entity.WIDTH][i].getId() == e2.getId() )
+            if (boardEntities[x / Entity.WIDTH][i] != e2 && boardEntities[x / Entity.WIDTH][i].getId() == e2.getId())
                 verticalNeighborList.add(boardEntities[x / Entity.WIDTH][i]);
             else
                 break;
@@ -272,7 +318,7 @@ public class World {
 
         //check down
         for (int j = y / Entity.HEIGHT + 1; j < height; j++) {
-            if( boardEntities[x / Entity.WIDTH][j]!=e2 && boardEntities[x / Entity.WIDTH][j].getId() == e2.getId())
+            if (boardEntities[x / Entity.WIDTH][j] != e2 && boardEntities[x / Entity.WIDTH][j].getId() == e2.getId())
                 verticalNeighborList.add(boardEntities[x / Entity.WIDTH][j]);
             else
                 break;
@@ -282,22 +328,29 @@ public class World {
     }
 
 
-    ArrayList<Entity> getHorizontalNeighbors(Entity e1, Entity e2) {
+    /**
+     * check match on horizontal direction
+     *
+     * @param horizontalNeighborList
+     * @param e1                     whose neighbor need to match
+     * @param e2                     entity need to match
+     * @return list of match entities
+     */
+    ArrayList<Entity> getHorizontalNeighbors(ArrayList<Entity> horizontalNeighborList, Entity e1, Entity e2) {
         int x = e1.getX();
         int y = e1.getY();
 
         //check left
         for (int i = x / Entity.WIDTH - 1; i >= 0; i--) {
-            if (boardEntities[i][y / Entity.HEIGHT]!=e2 && boardEntities[i][y / Entity.HEIGHT].getId() == e2.getId())
+            if (boardEntities[i][y / Entity.HEIGHT] != e2 && boardEntities[i][y / Entity.HEIGHT].getId() == e2.getId())
                 horizontalNeighborList.add(boardEntities[i][y / Entity.HEIGHT]);
             else
                 break;
         }
 
         //check right
-
         for (int j = x / Entity.WIDTH + 1; j < width; j++) {
-            if (boardEntities[j][y / Entity.HEIGHT]!=e2 && boardEntities[j][y / Entity.HEIGHT].getId() == e2.getId())
+            if (boardEntities[j][y / Entity.HEIGHT] != e2 && boardEntities[j][y / Entity.HEIGHT].getId() == e2.getId())
                 horizontalNeighborList.add(boardEntities[j][y / Entity.HEIGHT]);
             else
                 break;
@@ -308,29 +361,31 @@ public class World {
 
     /**
      * set switchedEntity
+     *
      * @param dir currentEntity move direction
      */
     public void setSwitchedEntity(Direction dir) {
-        switchedEntity=boardEntities[getArrX()+dir.getX()][getArrY()+dir.getY()];
+        switchedEntity = boardEntities[getArrX() + dir.getX()][getArrY() + dir.getY()];
     }
 
     /**
      * @return currentEntity array column #
      */
     public int getArrX() {
-        return currentEntity.getX()/Entity.WIDTH;
+        return currentEntity.getX() / Entity.WIDTH;
     }
 
     /**
      * @return currentEntity array row #
      */
     public int getArrY() {
-        return currentEntity.getY()/Entity.HEIGHT;
+        return currentEntity.getY() / Entity.HEIGHT;
     }
 
 
     /**
      * load double array of entity texture id from local
+     *
      * @param path
      */
     private void loadWorld(String path) {
