@@ -219,8 +219,15 @@ public class World {
         if (enoughNeighbors(currentEntity,switchedEntity))
             return true;
 
+        horizontalNeighborList.clear();
+        verticalNeighborList.clear();
+
         if (enoughNeighbors(switchedEntity,currentEntity))
             return true;
+
+
+        horizontalNeighborList.clear();
+        verticalNeighborList.clear();
 
         return false;
 
@@ -252,24 +259,20 @@ public class World {
 
     ArrayList<Entity> getVerticalNeighbors(Entity e1,Entity e2) {
         int x = e1.getX();
-        int y = Math.min(e1.getY(),e2.getY());
+        int y = e1.getY();
 
         //check up
-        Entity e=e1.getX()>e2.getX()? e1:e2;
 
         for (int i = y / Entity.HEIGHT - 1; i >= 0; i--) {
-            if (boardEntities[x / Entity.WIDTH][i].getId() == e.getId())
+            if (boardEntities[x / Entity.WIDTH][i]!=e2 && boardEntities[x / Entity.WIDTH][i].getId() == e2.getId() )
                 verticalNeighborList.add(boardEntities[x / Entity.WIDTH][i]);
             else
                 break;
         }
 
         //check down
-        y = Math.max(e1.getY(),e2.getY());
-        e=e1.getY()<e2.getY()? e1:e2;
-
         for (int j = y / Entity.HEIGHT + 1; j < height; j++) {
-            if (boardEntities[x / Entity.WIDTH][j].getId() == e.getId())
+            if( boardEntities[x / Entity.WIDTH][j]!=e2 && boardEntities[x / Entity.WIDTH][j].getId() == e2.getId())
                 verticalNeighborList.add(boardEntities[x / Entity.WIDTH][j]);
             else
                 break;
@@ -280,24 +283,21 @@ public class World {
 
 
     ArrayList<Entity> getHorizontalNeighbors(Entity e1, Entity e2) {
-        int x = Math.min(e1.getX(),e2.getX());
+        int x = e1.getX();
         int y = e1.getY();
 
         //check left
-        Entity e=e1.getX()>e2.getX()? e1:e2;
         for (int i = x / Entity.WIDTH - 1; i >= 0; i--) {
-            if (boardEntities[i][y / Entity.HEIGHT].getId() == e.getId())
+            if (boardEntities[i][y / Entity.HEIGHT]!=e2 && boardEntities[i][y / Entity.HEIGHT].getId() == e2.getId())
                 horizontalNeighborList.add(boardEntities[i][y / Entity.HEIGHT]);
             else
                 break;
         }
 
         //check right
-        x = Math.max(e1.getX(),e2.getX());
-        e=e1.getX()<e2.getX()? e1:e2;
 
         for (int j = x / Entity.WIDTH + 1; j < width; j++) {
-            if (boardEntities[j][y / Entity.HEIGHT].getId() == e.getId())
+            if (boardEntities[j][y / Entity.HEIGHT]!=e2 && boardEntities[j][y / Entity.HEIGHT].getId() == e2.getId())
                 horizontalNeighborList.add(boardEntities[j][y / Entity.HEIGHT]);
             else
                 break;

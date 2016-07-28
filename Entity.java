@@ -153,6 +153,7 @@ public class Entity{
     }
 
     /**
+
      * Set up false
      */
     public void setUpFalse() {  up = false;}
@@ -188,5 +189,25 @@ public class Entity{
      */
     public void setRightFalse() {
         right =false;
+    }
+
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Entity entity = (Entity) o;
+
+        if (x != entity.x) return false;
+        return y == entity.y;
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = x;
+        result = 31 * result + y;
+        return result;
     }
 }
