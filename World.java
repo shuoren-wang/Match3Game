@@ -16,12 +16,12 @@ public class World {
     private Entity currentEntity;
     private Entity switchedEntity;
     private Rectangle bounds;
-    private ArrayList<Entity> neighborList;
+    private ArrayList<Entity> horizontalNeighborList;
+    private ArrayList<Entity> verticalNeighborList;
 
     boolean pressedInBoundary = false;
 
     World(Game game, String path) {
-
 
         this.game = game;
 
@@ -31,7 +31,8 @@ public class World {
 
         bounds = new Rectangle(0, 0, width * Entity.WIDTH, height * Entity.HEIGHT);
 
-        neighborList = new ArrayList<>();
+        verticalNeighborList = new ArrayList<>();
+        horizontalNeighborList=new ArrayList<>();
     }
 
     /**
@@ -106,28 +107,17 @@ public class World {
         if (currentEntity.isRight()) {
             swap(xChange, yChange);
             currentEntity.setRightFalse();
-            currentEntity=null;
-            return;
-        }
-        if (currentEntity.isLeft()) {
+        }else if (currentEntity.isLeft()) {
             swap(xChange, yChange);
             currentEntity.setLeftFalse();
-            currentEntity=null;
-            return;
-        }
-        if (currentEntity.isUp()) {
+        }else if (currentEntity.isUp()) {
             swap(xChange, yChange);
             currentEntity.setUpFalse();
-            currentEntity=null;
-            return;
-        }
-        if (currentEntity.isDown()) {
+        }else if (currentEntity.isDown()) {
             swap(xChange, yChange);
             currentEntity.setDownFalse();
-            currentEntity=null;
-            return;
         }
-
+        currentEntity=null;
     }
 
     /**
@@ -181,36 +171,6 @@ public class World {
 
     }
 
-    private void loadWorld(String path) {
-        String file = Utils.loadFileAsString(path);
-        String[] tokens = file.split("\\s+");
-
-        width = Utils.parseInt(tokens[0]);
-        height = Utils.parseInt(tokens[1]);
-//        x=Utils.parseInt(tokens[2]);
-//        y=Utils.parseInt(tokens[3]);
-
-        boardIDs = new int[width][height];
-        for (int y = 0; y < height; y++)
-            for (int x = 0; x < width; x++) {
-                boardIDs[x][y] = Utils.parseInt(tokens[(x + y * width) + 4]);
-            }
-    }
-
-    /**
-     * if (x,y) is outside the map, return grass,
-     * otherwise, return the corresponding entity
-     *
-     * @param x index of tile on the x direction (column)
-     * @param y index of tile on the y direction (row)
-     * @return entity
-     */
-    public Entity getEntity(int x, int y) {
-        if (boardEntities[x][y] == null) {
-            boardEntities[x][y] = new Entity(x * Entity.WIDTH, y * Entity.HEIGHT, 4, game);
-        }
-        return boardEntities[x][y];
-    }
 
     /**
      * check if mouse move within game boundary (0~width*Entity.WIDTH,0~Entity.HEIGHT)
@@ -231,7 +191,7 @@ public class World {
         if(currentEntity==null)
             return;
 
-        if (canSwitch(dir.getX(), dir.getY())) {
+        if (canSwitch()) {
             switchEntity(dir.getX(), dir.getY());
         } else {
             currentEntity.setRightFalse();
@@ -239,7 +199,8 @@ public class World {
             currentEntity.setUpFalse();
             currentEntity.setDownFalse();
         }
-        neighborList.clear();
+        verticalNeighborList.clear();//////////////////////
+        horizontalNeighborList.clear();////////////////////
     }
 
 
@@ -250,7 +211,7 @@ public class World {
      * clear neighbor list
      * @return true, if switch can form a match
      */
-    private boolean canSwitch(int xChange, int yChange) {
+    private boolean canSwitch() {
 
         if (!checkBoundary(switchedEntity.getX(),switchedEntity.getY()))
             return false;
@@ -273,18 +234,12 @@ public class World {
     private boolean enoughNeighbors(Entity e1,Entity e2){
 
         if (getVerticalNeighbors(e1,e2).size()>=2){
-            neighborList.clear();
             return true;
         }
-
-        neighborList.clear();
 
         if(getHorizontalNeighbors(e1,e2).size()>=2){
-            neighborList.clear();
             return true;
         }
-
-        neighborList.clear();
 
         return false;
 
@@ -300,23 +255,27 @@ public class World {
         int y = Math.min(e1.getY(),e2.getY());
 
         //check up
+        Entity e=e1.getX()>e2.getX()? e1:e2;
+
         for (int i = y / Entity.HEIGHT - 1; i >= 0; i--) {
-            if (boardEntities[x / Entity.WIDTH][i].getId() == e2.getId())
-                neighborList.add(boardEntities[x / Entity.WIDTH][i]);
+            if (boardEntities[x / Entity.WIDTH][i].getId() == e.getId())
+                verticalNeighborList.add(boardEntities[x / Entity.WIDTH][i]);
             else
                 break;
         }
 
-        y = Math.max(e1.getY(),e2.getY());
         //check down
+        y = Math.max(e1.getY(),e2.getY());
+        e=e1.getY()<e2.getY()? e1:e2;
+
         for (int j = y / Entity.HEIGHT + 1; j < height; j++) {
-            if (boardEntities[x / Entity.WIDTH][j].getId() == e2.getId())
-                neighborList.add(boardEntities[x / Entity.WIDTH][j]);
+            if (boardEntities[x / Entity.WIDTH][j].getId() == e.getId())
+                verticalNeighborList.add(boardEntities[x / Entity.WIDTH][j]);
             else
                 break;
         }
 
-        return neighborList;
+        return verticalNeighborList;
     }
 
 
@@ -325,23 +284,26 @@ public class World {
         int y = e1.getY();
 
         //check left
+        Entity e=e1.getX()>e2.getX()? e1:e2;
         for (int i = x / Entity.WIDTH - 1; i >= 0; i--) {
-            if (boardEntities[i][y / Entity.HEIGHT].getId() == e2.getId())
-                neighborList.add(boardEntities[i][y / Entity.HEIGHT]);
+            if (boardEntities[i][y / Entity.HEIGHT].getId() == e.getId())
+                horizontalNeighborList.add(boardEntities[i][y / Entity.HEIGHT]);
             else
                 break;
         }
 
-        x = Math.max(e1.getX(),e2.getX());
         //check right
+        x = Math.max(e1.getX(),e2.getX());
+        e=e1.getX()<e2.getX()? e1:e2;
+
         for (int j = x / Entity.WIDTH + 1; j < width; j++) {
-            if (boardEntities[j][y / Entity.HEIGHT].getId() == e2.getId())
-                neighborList.add(boardEntities[j][y / Entity.HEIGHT]);
+            if (boardEntities[j][y / Entity.HEIGHT].getId() == e.getId())
+                horizontalNeighborList.add(boardEntities[j][y / Entity.HEIGHT]);
             else
                 break;
         }
 
-        return neighborList;
+        return horizontalNeighborList;
     }
 
     /**
@@ -364,5 +326,41 @@ public class World {
      */
     public int getArrY() {
         return currentEntity.getY()/Entity.HEIGHT;
+    }
+
+
+    /**
+     * load double array of entity texture id from local
+     * @param path
+     */
+    private void loadWorld(String path) {
+        String file = Utils.loadFileAsString(path);
+        String[] tokens = file.split("\\s+");
+
+        width = Utils.parseInt(tokens[0]);
+        height = Utils.parseInt(tokens[1]);
+//        x_start=Utils.parseInt(tokens[2]);
+//        y_start=Utils.parseInt(tokens[3]);
+
+        boardIDs = new int[width][height];
+        for (int y = 0; y < height; y++)
+            for (int x = 0; x < width; x++) {
+                boardIDs[x][y] = Utils.parseInt(tokens[(x + y * width) + 4]);
+            }
+    }
+
+    /**
+     * if (x,y) is outside the map, return grass,
+     * otherwise, return the corresponding entity
+     *
+     * @param x index of tile on the x direction (column)
+     * @param y index of tile on the y direction (row)
+     * @return entity
+     */
+    public Entity getEntity(int x, int y) {
+        if (boardEntities[x][y] == null) {
+            boardEntities[x][y] = new Entity(x * Entity.WIDTH, y * Entity.HEIGHT, 4, game);
+        }
+        return boardEntities[x][y];
     }
 }
