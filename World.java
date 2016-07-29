@@ -2,6 +2,7 @@ package game;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Random;
 
 
 /**
@@ -20,6 +21,13 @@ public class World {
     private ArrayList<Entity> horizontalNeighborList2;
     private ArrayList<Entity> verticalNeighborList1;
     private ArrayList<Entity> verticalNeighborList2;
+
+    private static final int MAX_EMPTY_TIME = 500;
+    private static final int MAX_DETECT_TIME = 500;
+    private static final int MAX_CLEAR_TIME = 500;
+    private int emptyTime = 0;
+    private int detectTime = 0;
+    private int clearTime = 0;
 
 
     boolean pressedInBoundary = false;
@@ -88,6 +96,20 @@ public class World {
                 switchedEntity = null;
             }
 
+        } else {
+            if (emptyTime < MAX_EMPTY_TIME) {
+                emptyTime++;
+                return;
+            } else {
+                emptyTime = 0;
+            }
+
+            dropTiles();
+
+
+
+
+
         }
 
     }
@@ -102,10 +124,6 @@ public class World {
         delMatchedList(horizontalNeighborList1);
         delMatchedList(horizontalNeighborList2);
 
-        verticalNeighborList1.clear();//////////////////////
-        horizontalNeighborList1.clear();////////////////////
-        verticalNeighborList2.clear();//////////////////////
-        horizontalNeighborList2.clear();////////////////////
 
     }
 
@@ -115,16 +133,22 @@ public class World {
      * @param neighborList
      */
     private void delMatchedList(ArrayList<Entity> neighborList) {
-        int x;
-        int y;
+        if (neighborList.size() >= 2) {
+            if (currentEntity != null && neighborList.get(0).getId() == currentEntity.getId())
+                boardEntities[currentEntity.getX() / Entity.WIDTH][currentEntity.getY() / Entity.HEIGHT] = null;
 
-        if (neighborList != null)
+            else if (switchedEntity != null && neighborList.get(0).getId() == switchedEntity.getId())
+                boardEntities[switchedEntity.getX() / Entity.WIDTH][switchedEntity.getY() / Entity.HEIGHT] = null;
+
+
             for (int i = 0; i < neighborList.size(); i++) {
-                x = neighborList.get(i).getX() / Entity.WIDTH;
-                y = neighborList.get(i).getY() / Entity.HEIGHT;
+                int x = neighborList.get(i).getX() / Entity.WIDTH;
+                int y = neighborList.get(i).getY() / Entity.HEIGHT;
                 boardEntities[x][y] = null;
             }
 
+            neighborList.clear();
+        }
     }
 
     /**
@@ -179,14 +203,24 @@ public class World {
         if (!checkBoundary(currentEntity.getX() + xChange * Entity.WIDTH, currentEntity.getY() + yChange * Entity.HEIGHT))
             return;
 
-
         Entity tempCurrentEntity = new Entity(currentEntity.getX(), currentEntity.getY(), currentEntity.getId(), game);
         Entity exchangeEntity = boardEntities[getArrX() + xChange][getArrY() + yChange];
+
+
+        //switch x coordinate
+        tempCurrentEntity.setX(exchangeEntity.getX());
+        tempCurrentEntity.setY(exchangeEntity.getY());
+
+        exchangeEntity.setX(currentEntity.getX());
+        exchangeEntity.setY(currentEntity.getY());
 
         //switch boardEntities[][] position
         boardEntities[getArrX()][getArrY()] = exchangeEntity;
         boardEntities[getArrX() + xChange][getArrY() + yChange] = tempCurrentEntity;
 
+        //update currentEntity and switchedEntity
+        currentEntity = exchangeEntity;
+        switchedEntity = tempCurrentEntity;
     }
 
 
@@ -251,8 +285,8 @@ public class World {
 
         setNeighborLists();
 
-        if (horizontalNeighborList1.size() >= 3 || verticalNeighborList1.size() >= 3 ||
-                horizontalNeighborList2.size() >= 3 || verticalNeighborList2.size() >= 3) {
+        if (horizontalNeighborList1.size() >= 2 || verticalNeighborList1.size() >= 2 ||
+                horizontalNeighborList2.size() >= 2 || verticalNeighborList2.size() >= 2) {
             return true;
         }
         return false;
@@ -267,32 +301,22 @@ public class World {
      */
     private void setNeighborLists() {
 
-        if (getVerticalNeighbors(verticalNeighborList1, currentEntity, switchedEntity).size() >= 2) {
-            verticalNeighborList1.add(switchedEntity);
-        } else {
+        if (getVerticalNeighbors(verticalNeighborList1, currentEntity, switchedEntity).size() < 2)
             verticalNeighborList1.clear();
-        }
 
-        if (getHorizontalNeighbors(horizontalNeighborList1, currentEntity, switchedEntity).size() >= 2) {
-            horizontalNeighborList1.add(switchedEntity);
-        } else {
+
+        if (getHorizontalNeighbors(horizontalNeighborList1, currentEntity, switchedEntity).size() < 2)
             horizontalNeighborList1.clear();
-        }
 
-        if (getHorizontalNeighbors(horizontalNeighborList2, switchedEntity, currentEntity).size() >= 2) {
-            horizontalNeighborList2.add(currentEntity);
-        } else {
+
+        if (getHorizontalNeighbors(horizontalNeighborList2, switchedEntity, currentEntity).size() < 2)
             horizontalNeighborList2.clear();
-        }
 
-        if (getVerticalNeighbors(verticalNeighborList2, switchedEntity, currentEntity).size() >= 2) {
-            verticalNeighborList2.add(currentEntity);
-        } else {
+
+        if (getVerticalNeighbors(verticalNeighborList2, switchedEntity, currentEntity).size() < 2)
             verticalNeighborList2.clear();
-        }
+
     }
-
-
 
 
     /**
@@ -414,8 +438,72 @@ public class World {
      */
     public Entity getEntity(int x, int y) {
         if (boardEntities[x][y] == null) {
-            boardEntities[x][y] = new Entity(x * Entity.WIDTH, y * Entity.HEIGHT, 4, game);
+            boardEntities[x][y] = new Entity(x * Entity.WIDTH, y * Entity.HEIGHT, Entity.EMPTY_TILE_ID, game);
         }
         return boardEntities[x][y];
     }
+
+
+    /**
+     * if there is empty tile swap with the one above and generate random tiles for empty space in the top row
+     */
+    public void dropTiles() {
+        for (int x = 0; x < width; x++) {
+            for (int y = height - 1; y > 0; y--) {
+                if (boardEntities[x][y].getId() == Entity.EMPTY_TILE_ID) {
+                    for (int j = y; j > 0; j--) {
+                        boardEntities[x][j].setId(boardEntities[x][j - 1].id);
+                        boardEntities[x][j - 1].setId(boardEntities[x][j].id);
+                    }
+                    boardEntities[x][0] = createNewEntity(boardEntities[x][0].getX(), 0);
+                }
+            }
+            if (boardEntities[x][0].getId() == Entity.EMPTY_TILE_ID)
+                boardEntities[x][0] = createNewEntity(boardEntities[x][0].getX(), 0);
+        }
+
+    }
+
+
+    /**
+     * randomly create new entity using current texture
+     *
+     * @param xCoor x coordinate of the tile
+     * @param yCoor y coordinate of the tile
+     * @return
+     */
+    Entity createNewEntity(int xCoor, int yCoor) {
+        Random r = new Random();
+        Entity e = new Entity(xCoor, yCoor, r.nextInt(4), game);
+
+        return e;
+    }
+
+
+    /**
+     * @return true if there is chain in the array
+     */
+    private boolean detectChains() {
+
+        return false;
+    }
+
+
+
+
+
+    /**
+     * if there is a match chain, change their texture and id to Entity.EMPTY_TILE_ID
+     *
+     * @param x column
+     * @param y row
+     * @return number of matched tiles
+     */
+    private int chainToEmpty(int x, int y) {
+
+
+        return 0;
+    }
+
+
 }

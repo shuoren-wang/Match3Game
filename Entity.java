@@ -7,6 +7,8 @@ import java.awt.image.BufferedImage;
  * Created by shuorenwang on 2016-07-24.
  */
 public class Entity{
+    public static final int SPEED=2;
+    public static final int EMPTY_TILE_ID=5;
     protected Game game;
     private int x;
     private int y;
@@ -88,23 +90,7 @@ public class Entity{
     //GETTER and SETTER
     //tree 0, dirt 1, lizard 2,wall 3,grass 4, stone 5
     public BufferedImage getTexture() {
-        switch (id){
-            case 0:
-                return Assets.tree;
-            case 1:
-                return Assets.dirt;
-            case 2:
-                return Assets.lizard;
-            case 3:
-                return Assets.wall;
-            case 4:
-                return Assets.grass;
-            case 5:
-                return Assets.stone;
-            default:
-                return Assets.grass;
-        }
-
+       return texture;
     }
 
     /**
@@ -126,10 +112,10 @@ public class Entity{
                 texture= Assets.wall;
                 return;
             case 4:
-                texture= Assets.grass;
+                texture= Assets.stone;
                 return;
             case 5:
-                texture= Assets.stone;
+                texture= Assets.grass;
                 return;
             default:
                 texture= Assets.grass;
@@ -209,5 +195,15 @@ public class Entity{
         int result = x;
         result = 31 * result + y;
         return result;
+    }
+
+    public int decreaseY(){
+        y=y+SPEED;
+        return y;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+        setTexture(id);
     }
 }
