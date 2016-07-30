@@ -8,13 +8,12 @@ import java.awt.image.BufferedImage;
  */
 public class Entity{
     public static final int SPEED=2;
-    public static final int EMPTY_TILE_ID=5;
+    public static final int EMPTY_TILE_ID=6;
     protected Game game;
     private int x;
     private int y;
     public static final int WIDTH=60,HEIGHT=60;
-    protected Rectangle bounds;
-    public BufferedImage texture=Assets.grass;
+    public BufferedImage texture=Assets.sapphire;
     protected int id;
     protected boolean up, down, left, right;
 
@@ -32,8 +31,6 @@ public class Entity{
         left =false;
         right =false;
 
-
-        bounds=new Rectangle(0,0,WIDTH,HEIGHT);
     }
 
     private void getInput(){
@@ -88,7 +85,7 @@ public class Entity{
 
 
     //GETTER and SETTER
-    //tree 0, dirt 1, lizard 2,wall 3,grass 4, stone 5
+    //pink 0, purple 1, sky 2,orange 3,sapphire 4, green 5
     public BufferedImage getTexture() {
        return texture;
     }
@@ -100,25 +97,25 @@ public class Entity{
     private void setTexture(int id) {
         switch (id){
             case 0:
-                texture= Assets.tree;
+                texture= Assets.pink;
                 return;
             case 1:
-                texture= Assets.dirt;
+                texture= Assets.purple;
                 return;
             case 2:
-                texture= Assets.lizard;
+                texture= Assets.sky;
                 return;
             case 3:
-                texture= Assets.wall;
+                texture= Assets.orange;
                 return;
             case 4:
-                texture= Assets.stone;
+                texture= Assets.green;
                 return;
             case 5:
-                texture= Assets.grass;
+                texture= Assets.sapphire;
                 return;
             default:
-                texture= Assets.grass;
+                texture= Assets.blank;
                 return;
         }
 
@@ -130,9 +127,6 @@ public class Entity{
         return id;
     }
 
-    public Rectangle getBounds() {
-        return bounds;
-    }
 
     public boolean isUp() {
         return up;

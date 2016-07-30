@@ -9,19 +9,20 @@ import java.io.IOException;
  * Created by shuorenwang on 2016-07-20.
  */
 public class Assets {
-    private static final int width=108, height=108; // real width/height in pixel for each image
-    public static BufferedImage spriteSheet, dirt, grass, wall, tree, stone, lizard;
+    private static final int width=100, height=100; // real width/height in pixel for each image
+    public static BufferedImage spriteSheet, purple, sapphire, orange, pink, green, sky,blank;
 
     public static void init(){
 
-        spriteSheet=loadImage("res/tile.png");
+        spriteSheet=loadImage("res/flowers.png");
 
-        dirt=spriteSheet.getSubimage(0,0,width,height);
-        tree=spriteSheet.getSubimage(width,0, width,height);
-        stone=spriteSheet.getSubimage(2 * width,0,width,height);
-        grass=spriteSheet.getSubimage(3 * width,0,width,height);
-        wall=spriteSheet.getSubimage(0,2*height,width,height);
-        lizard=spriteSheet.getSubimage(0,height,width,height);
+        purple =spriteSheet.getSubimage(0,0,width,height);
+        pink =spriteSheet.getSubimage(width,0, width,height);
+        green =spriteSheet.getSubimage(2 * width,0,width,height);
+        sapphire =spriteSheet.getSubimage(3 * width,0,width,height);
+        orange =spriteSheet.getSubimage(4*width,0,width,height);
+        sky =spriteSheet.getSubimage(0,height,width,height);
+        blank=spriteSheet.getSubimage(width,height,width,height);
     }
 
     /**

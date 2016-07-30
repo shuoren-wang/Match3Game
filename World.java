@@ -12,6 +12,7 @@ public class World {
     private int width, height;  //number of tiles
     private int mouseX, mouseY;
     private Game game;
+    private int score;
     private int[][] boardIDs;
     private Entity[][] boardEntities;
     private Entity currentEntity;
@@ -22,9 +23,10 @@ public class World {
     private ArrayList<Entity> verticalNeighborList1;
     private ArrayList<Entity> verticalNeighborList2;
 
-    private static final int MAX_EMPTY_TIME = 500;
+    private ArrayList<Entity> fillEmptyList;
+
+
     private static final int MAX_DETECT_TIME = 500;
-    private static final int MAX_CLEAR_TIME = 500;
     private int emptyTime = 0;
     private int detectTime = 0;
     private int clearTime = 0;
@@ -35,6 +37,7 @@ public class World {
     World(Game game, String path) {
 
         this.game = game;
+        score = 0;
 
         loadWorld(path);
 
@@ -46,6 +49,8 @@ public class World {
         verticalNeighborList2 = new ArrayList<>();
         horizontalNeighborList1 = new ArrayList<>();
         horizontalNeighborList2 = new ArrayList<>();
+        fillEmptyList = new ArrayList<>();
+
     }
 
     /**
@@ -67,6 +72,7 @@ public class World {
     public void tick() {
 
         setCurrentEntity();
+
 
         if (currentEntity != null) {
 
@@ -94,24 +100,23 @@ public class World {
 
                 currentEntity = null;
                 switchedEntity = null;
+
             }
 
-        } else {
-            if (emptyTime < MAX_EMPTY_TIME) {
-                emptyTime++;
+        }else{
+
+            if (clearTime < MAX_DETECT_TIME) {
+                clearTime++;
                 return;
             } else {
-                emptyTime = 0;
+                clearTime = 0;
             }
 
             dropTiles();
 
 
 
-
-
         }
-
     }
 
 
@@ -218,6 +223,7 @@ public class World {
         boardEntities[getArrX()][getArrY()] = exchangeEntity;
         boardEntities[getArrX() + xChange][getArrY() + yChange] = tempCurrentEntity;
 
+
         //update currentEntity and switchedEntity
         currentEntity = exchangeEntity;
         switchedEntity = tempCurrentEntity;
@@ -261,6 +267,8 @@ public class World {
             return;
 
         if (canSwitch()) {
+            score++;
+            System.out.println("Current score is " + score);
             switchEntity(dir.getX(), dir.getY());
         } else {
             currentEntity.setRightFalse();
@@ -275,6 +283,7 @@ public class World {
     /**
      * if the right/left/up/down switch can form a match
      * if the size of neighbors >=3 (including the currentEntity or switchedEntity),return true
+     * set tileDeleted = true
      *
      * @return true, if switch can form a match
      */
@@ -429,7 +438,7 @@ public class World {
     }
 
     /**
-     * if (x,y) is outside the map, return grass,
+     * if (x,y) is outside the map, return sapphire,
      * otherwise, return the corresponding entity
      *
      * @param x index of tile on the x direction (column)
@@ -446,22 +455,35 @@ public class World {
 
     /**
      * if there is empty tile swap with the one above and generate random tiles for empty space in the top row
+     *
+     * @return fillEmptyList.size()>0
      */
-    public void dropTiles() {
+    public boolean dropTiles() {
         for (int x = 0; x < width; x++) {
             for (int y = height - 1; y > 0; y--) {
-                if (boardEntities[x][y].getId() == Entity.EMPTY_TILE_ID) {
+                if ( boardEntities[x][y].getId() == Entity.EMPTY_TILE_ID) {
                     for (int j = y; j > 0; j--) {
+                        if (!fillEmptyList.contains(boardEntities[x][j])) {
+                            fillEmptyList.add(boardEntities[x][j]);
+                        }
+                        int id = boardEntities[x][j].id;
                         boardEntities[x][j].setId(boardEntities[x][j - 1].id);
-                        boardEntities[x][j - 1].setId(boardEntities[x][j].id);
+                        boardEntities[x][j - 1].setId(id);
                     }
-                    boardEntities[x][0] = createNewEntity(boardEntities[x][0].getX(), 0);
                 }
             }
-            if (boardEntities[x][0].getId() == Entity.EMPTY_TILE_ID)
+            if (boardEntities[x][0].getId() == Entity.EMPTY_TILE_ID) {
                 boardEntities[x][0] = createNewEntity(boardEntities[x][0].getX(), 0);
+                //check chains after drop tile for each column
+                fillEmptyList.add(boardEntities[x][0]);
+            }
         }
 
+
+        if (fillEmptyList.size() > 0) {
+            return true;
+        }
+        return false;
     }
 
 
@@ -474,36 +496,29 @@ public class World {
      */
     Entity createNewEntity(int xCoor, int yCoor) {
         Random r = new Random();
-        Entity e = new Entity(xCoor, yCoor, r.nextInt(4), game);
+        Entity e = new Entity(xCoor, yCoor, r.nextInt(5), game);
 
         return e;
     }
 
 
-    /**
-     * @return true if there is chain in the array
-     */
-    private boolean detectChains() {
 
-        return false;
+    //GETTERS and SETTERS
+
+
+    public int getWidth() {
+        return width;
     }
 
-
-
-
-
-    /**
-     * if there is a match chain, change their texture and id to Entity.EMPTY_TILE_ID
-     *
-     * @param x column
-     * @param y row
-     * @return number of matched tiles
-     */
-    private int chainToEmpty(int x, int y) {
-
-
-        return 0;
+    public int getHeight() {
+        return height;
     }
 
+    public Entity[][] getBoardEntities() {
+        return boardEntities;
+    }
 
+    public ArrayList<Entity> getFillEmptyList() {
+        return fillEmptyList;
+    }
 }

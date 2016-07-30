@@ -6,7 +6,7 @@ import java.awt.image.BufferStrategy;
 /**
  * Created by shuorenwang on 2016-07-24.
  */
-public class Game implements Runnable{
+public class Game implements Runnable {
 
     private Gui gui;
     private Thread th;
@@ -20,16 +20,16 @@ public class Game implements Runnable{
     private MouseManager mouseManager;
 
 
-    public Game(){
-        world=new World(this,"res/level1.txt");
-        mouseManager=new MouseManager();
+    public Game() {
+        world = new World(this, "res/level1.txt");
+        mouseManager = new MouseManager();
         init();
 
 
     }
 
-    private void init(){
-        gui=new Gui();
+    private void init() {
+        gui = new Gui();
         gui.addMouseListener(mouseManager);
         gui.addMouseMotionListener(mouseManager);
         gui.getCanvas().addMouseListener(mouseManager);
@@ -37,27 +37,27 @@ public class Game implements Runnable{
 
         Assets.init();
 
-        th=new Thread(this);
+        th = new Thread(this);
         th.start();
 
     }
 
 
-    public void tick(){
+    public void tick() {
         world.tick();
     }
 
-    public void render(){
-        bufferStrategy=gui.getCanvas().getBufferStrategy();
-        if(bufferStrategy==null){
+    public void render() {
+        bufferStrategy = gui.getCanvas().getBufferStrategy();
+        if (bufferStrategy == null) {
             gui.getCanvas().createBufferStrategy(3);
             return;
         }
 
-        g=bufferStrategy.getDrawGraphics();
+        g = bufferStrategy.getDrawGraphics();
 
         //Clear Screen
-        g.clearRect(0,0,gui.getWidth(),gui.getHeight());
+        g.clearRect(0, 0, gui.getWidth(), gui.getHeight());
 
         //Draw Here
 
@@ -69,9 +69,10 @@ public class Game implements Runnable{
         bufferStrategy.show();
         g.dispose();
     }
+
     @Override
     public void run() {
-        while (true){
+        while (true) {
             tick();
             render();
         }

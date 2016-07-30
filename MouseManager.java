@@ -17,7 +17,7 @@ public class MouseManager implements MouseListener,MouseMotionListener {
     public boolean up,down,left,right;
     private final int LIMIT=3;   //smallest movement is 3
 
-    MouseManager(){
+    public MouseManager(){
 
         preX=0;
         preY=0;
