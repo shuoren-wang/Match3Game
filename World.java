@@ -12,6 +12,7 @@ public class World {
     private int width, height;  //number of tiles
     private int mouseX, mouseY;
     private Game game;
+    private ClearMatch clearMatch;
     private int score;
     private int[][] boardIDs;
     private Entity[][] boardEntities;
@@ -24,6 +25,7 @@ public class World {
     private ArrayList<Entity> verticalNeighborList2;
 
     private ArrayList<Entity> fillEmptyList;
+    public boolean dropTiles=false;
 
 
     private static final int MAX_DETECT_TIME = 500;
@@ -37,6 +39,7 @@ public class World {
     World(Game game, String path) {
 
         this.game = game;
+        clearMatch=game.getClearMatch();
         score = 0;
 
         loadWorld(path);
@@ -113,7 +116,6 @@ public class World {
             }
 
             dropTiles();
-
 
 
         }
@@ -481,6 +483,7 @@ public class World {
 
 
         if (fillEmptyList.size() > 0) {
+            dropTiles=true;
             return true;
         }
         return false;
@@ -520,5 +523,9 @@ public class World {
 
     public ArrayList<Entity> getFillEmptyList() {
         return fillEmptyList;
+    }
+
+    public void setBoardEntities(Entity[][] boardEntities) {
+        this.boardEntities = boardEntities;
     }
 }

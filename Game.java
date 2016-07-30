@@ -15,13 +15,14 @@ public class Game implements Runnable {
     private Graphics g;
 
     private World world;
-
+    private ClearMatch clearMatch;
 
     private MouseManager mouseManager;
 
 
     public Game() {
         world = new World(this, "res/level1.txt");
+        clearMatch=new ClearMatch(this,world);
         mouseManager = new MouseManager();
         init();
 
@@ -44,7 +45,16 @@ public class Game implements Runnable {
 
 
     public void tick() {
-        world.tick();
+
+        if(!world.dropTiles) {
+            world.tick();
+        }else {
+            clearMatch.setBoardEntities(world.getBoardEntities());
+            clearMatch.tick();
+            world.setBoardEntities(clearMatch.getBoardEntities());
+            world.dropTiles=false;
+        }
+
     }
 
     public void render() {
@@ -61,8 +71,8 @@ public class Game implements Runnable {
 
         //Draw Here
 
+            world.render(g);
 
-        world.render(g);
 
         //End Draw
 
@@ -80,6 +90,10 @@ public class Game implements Runnable {
 
     //Getters and Setters
 
+
+    public ClearMatch getClearMatch() {
+        return clearMatch;
+    }
 
     public World getWorld() {
         return world;

@@ -1,12 +1,13 @@
 package game;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.Random;
 
 /**
  * Created by shuorenwang on 2016-07-30.
  */
-public class ClearMatch  {
+public class ClearMatch {
 
     private int width, height;  //number of tiles
     private Entity[][] boardEntities;
@@ -14,29 +15,33 @@ public class ClearMatch  {
     private World world;
     private ArrayList<Entity> fillVerticalList;
     private ArrayList<Entity> fillHorizontalList;
-    private ArrayList<Entity> fillEmptyList;
+    private boolean foundChain;
+
+    private static final int MAX_DETECT_TIME = 500;
+    private int emptyTime = 0;
+    private int detectTime = 0;
+    private int clearTime = 0;
+
 
     public ClearMatch(Game game, World world) {
-        this.game=game;
-        this.world=world;
-        boardEntities=world.getBoardEntities();
-        width=world.getWidth();
-        height=world.getHeight();
-        fillEmptyList=world.getFillEmptyList();
-
+        this.game = game;
+        this.world = world;
+        boardEntities = world.getBoardEntities();
+        width = world.getWidth();
+        height = world.getHeight();
         fillVerticalList = new ArrayList<>();
         fillHorizontalList = new ArrayList<>();
-    }
 
-
-    public void tick(){
-        if(fillEmptyList.size()>0){
-            detectChains();
-            dropTiles();
-        }
+        foundChain = false;
 
     }
 
+
+    public void tick() {
+
+        detectChains();
+
+    }
 
     /**
      * if there is empty tile swap with the one above and generate random tiles for empty space in the top row
@@ -44,24 +49,18 @@ public class ClearMatch  {
     public void dropTiles() {
         for (int x = 0; x < width; x++) {
             for (int y = height - 1; y > 0; y--) {
-                if (boardEntities[x][y] != null && boardEntities[x][y].getId() == Entity.EMPTY_TILE_ID) {
+                if (boardEntities[x][y].getId() == Entity.EMPTY_TILE_ID) {
                     for (int j = y; j > 0; j--) {
-                        if (!fillEmptyList.contains(boardEntities[x][j])) {
-                            fillEmptyList.add(boardEntities[x][j]);
-                            int id = boardEntities[x][j].id;
-                            boardEntities[x][j].setId(boardEntities[x][j - 1].id);
-                            boardEntities[x][j - 1].setId(id);
-                        }
+                        int id = boardEntities[x][j].id;
+                        boardEntities[x][j].setId(boardEntities[x][j - 1].id);
+                        boardEntities[x][j - 1].setId(id);
                     }
                 }
             }
-            if (boardEntities[x][0] != null && boardEntities[x][0].getId() == Entity.EMPTY_TILE_ID) {
+            if (boardEntities[x][0].getId() == Entity.EMPTY_TILE_ID) {
                 boardEntities[x][0] = createNewEntity(boardEntities[x][0].getX(), 0);
-                //check chains after drop tile for each column
-                fillEmptyList.add(boardEntities[x][0]);
             }
         }
-
 
     }
 
@@ -84,15 +83,23 @@ public class ClearMatch  {
      * @return true if there is chain in the tile array, delete chain and  call dropTile()
      */
     public void detectChains() {
-        for (int i = 0; i < fillEmptyList.size(); i++) {
-            boolean dv = detectVerticalChains(fillEmptyList.get(i));
-            boolean dh = detectHorizontalChains(fillEmptyList.get(i));
-            if (dv || dh) {
-                clearChainList();
-            } else {
-                fillEmptyList.remove(i);
+        foundChain = false;
+
+        for (int y = 0; y < height; y++)
+            for (int x = 0; x < width; x++) {
+                if (boardEntities[x][y].getId() != Entity.EMPTY_TILE_ID) {
+                    boolean dh = detectHorizontalChains(boardEntities[x][y]);
+                    boolean dv = detectVerticalChains(boardEntities[x][y]);
+
+                    if (dv || dh) {
+                        clearChainList();
+                        foundChain = true;
+                    }
+                }
             }
-        }
+
+            dropTiles();
+
     }
 
 
@@ -145,12 +152,6 @@ public class ClearMatch  {
             fillVerticalList.clear();
             return false;
         } else {
-            //add entities in fillEmptyList, not including e
-            for (Entity next : fillVerticalList) {
-                if(!fillEmptyList.contains(next))
-                    fillEmptyList.add(next);
-            }
-
             fillVerticalList.add(e);
         }
 
@@ -184,15 +185,45 @@ public class ClearMatch  {
             fillHorizontalList.clear();
             return false;
         } else {
-            //add entities in fillEmptyList, not including e
-            for (Entity next : fillHorizontalList) {
-                if(!fillEmptyList.contains(next))
-                    fillEmptyList.add(next);
-            }
-
             fillHorizontalList.add(e);
         }
 
         return true;
+    }
+
+
+    public void render(Graphics g) {
+        for (int y = 0; y < height; y++)
+            for (int x = 0; x < width; x++) {
+                getEntity(x, y).render(g);
+            }
+
+    }
+
+
+    public void setBoardEntities(Entity[][] boardEntities) {
+        this.boardEntities = boardEntities;
+    }
+
+    /**
+     * if (x,y) is outside the map, return sapphire,
+     * otherwise, return the corresponding entity
+     *
+     * @param x index of tile on the x direction (column)
+     * @param y index of tile on the y direction (row)
+     * @return entity
+     */
+    public Entity getEntity(int x, int y) {
+        if (boardEntities[x][y] == null) {
+            boardEntities[x][y] = new Entity(x * Entity.WIDTH, y * Entity.HEIGHT, Entity.EMPTY_TILE_ID, game);
+        }
+        return boardEntities[x][y];
+    }
+
+
+    //Getters and Setters
+
+    public Entity[][] getBoardEntities() {
+        return boardEntities;
     }
 }
